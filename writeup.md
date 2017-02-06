@@ -60,19 +60,20 @@ The code for this step is contained in the python function `get_mtx_dist()` loca
 
 I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
 
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result:
+I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to a test image (i.e. `./test_images/straight_lines1.jpg`) using the `cv2.undistort()` function and obtained this result:
 
 Original image | Undistorted image         
 ----|-------
 ![Original image](camera_cal/calibration1.jpg) | ![Undistorted image](output_images/undistort_output.jpg)
 
+---
 
 ### Pipeline (single images)
 
 The code for this part is located in code cell 3 of `code.py`, however, it uses helper function defined in code cell 1.
 
 #### 1. Provide an example of a distortion-corrected image.
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one (`test_images/straight_lines1.jpg`):
+To demonstrate this step, I will describe how I apply the distortion correction to one of the test images (i.e. `./test_images/straight_lines1.jpg`):
 
 Original image | Undistorted image         
 ----|-------
@@ -81,7 +82,7 @@ Original image | Undistorted image
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 The code for this step is defined in the `get_color_combo_binary(img,sx_thresh=(20, 100), s_thresh=(170, 255),  showGUI=False)` function located in code cell 1.
 
-I used a combination of color (in HLS space) and gradient thresholds to generate a binary image. I also used a `region_of_interest(img, vertices)` function (also located in code cell 1) to get a masked binary image. Here's an example of my output for this step used to `test_images/straight_lines1.jpg`, which has already been shown above.
+I used a combination of color (in HLS space) and gradient thresholds to generate a binary image. I also used a `region_of_interest(img, vertices)` function (also located in code cell 1) to get a masked binary image. Here's an example of my output for this step used to `./test_images/straight_lines1.jpg`, which has already been shown above.
 
 color binary | combined binary  | masked combined binary       
 ----|-------|-------
@@ -89,9 +90,9 @@ color binary | combined binary  | masked combined binary
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `get_persp_trans_mtx(img_undist, showGUI=False)` and a function called `do_persp_tf(img, M, showGUI=False)`, which appear in code cell 1 in the file `code.py`.  
+The code for my perspective transform includes a function called `get_persp_trans_mtx(img_undist, showGUI=False)` and a function called `do_persp_tf(img, M, showGUI=False)`, which appear in code cell 1 of the file `code.py`.  
 
-The `get_persp_trans_mtx(img_undist, showGUI=False)` function takes as inputs an (Undistorted) image (`img_undist`), and returns a perspective transformation matrix `M` and its inverse `Minv`.  
+The `get_persp_trans_mtx(img_undist, showGUI=False)` function takes as inputs an (undistorted) image `img_undist`, and returns a perspective transformation matrix `M` and its inverse `Minv`.  
 
 I chose the hardcode the source and destination points in the following manner:
 
@@ -112,7 +113,7 @@ dst = np.float32(
 ```
 This resulted in the following source and destination points:
 
-| Source        | Destination   |
+| src        | dst   |
 |:-------------:|:-------------:|
 | 585, 460      | 320, 0        |
 | 203, 720      | 320, 720      |
@@ -125,9 +126,9 @@ And I then used the following code to get `M` and `Minv`:
 M = cv2.getPerspectiveTransform(src, dst)
 Minv = cv2.getPerspectiveTransform(dst, src)
 ```
-For the `do_persp_tf(img, M, showGUI=False)` function, I simply used `cv2.warpPerspective(img, M, (img.shape[1], img.shape[0]))`.
+For the `do_persp_tf(img, M, showGUI=False)` function, I simply used OpenCV function `cv2.warpPerspective(img, M, (img.shape[1], img.shape[0]))`.
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image (i.e. `test_images/straight_lines1.jpg`) and its warped counterpart to verify that the lines appear parallel in the warped image.
+I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image (i.e. `./test_images/straight_lines1.jpg`) and its warped counterpart to verify that the lines appear parallel in the warped image.
 
 src image | dst image         
 ----|-------
@@ -141,7 +142,7 @@ binary | perspective transformed binary
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-The code for finding lane-line pixels includes a function called `find_left_right_line_points(warped_binary)`, a function called `do_poly_fit(leftx,lefty,rightx,righty, warped_binary=None)`, and a function called `find_left_right_line_points_again(warped_binary, left_fit, right_fit)`, all appear in code cell 1 in the file `code.py`.
+The code for finding lane-line pixels and fitting their positions with a polynomial includes a function called `find_left_right_line_points(warped_binary)`, a function called `do_poly_fit(leftx,lefty,rightx,righty, warped_binary=None)`, and a function called `find_left_right_line_points_again(warped_binary, left_fit, right_fit)`, all appear in code cell 1 of the file `code.py`.
 
 `find_left_right_line_points(warped_binary)` is used to find left and right lane-line pixels at the beginning of the pipeline. It takes as input a warped binary image called "warped_binary" and then makes a histogram of the bottom half of the image. By finding the peak of the left and right halves of the histogram, it creates the starting point for the left and right lines. It then uses sliding windows to find more pixels that belong to the left and the right lane-lines.
 
@@ -152,7 +153,7 @@ right_fit = np.polyfit(righty, rightx, 2)
 ```
 
 Once we know where the lines are, in the next frame of video we don't need to do a blind search again, but instead we can just search in a margin around the previous
-line position. The function `find_left_right_line_points_again(warped_binary, left_fit, right_fit)` is used to achieve this.
+line position. The function `find_left_right_line_points_again(warped_binary, left_fit, right_fit)` was used to achieve this.
 
 Following is the effect of applying this step to the perspective transformed binary image (i.e. `./output_images/straight_lines1_combined_binary_masked_warped.jpg`)
 
@@ -162,7 +163,7 @@ perspective transformed binary | fitted perspective transformed binary
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-The code for this step is the function `calculate_curvature_offset(warped_binary,left_fit,right_fit)` located in code cell 1 in `code.py`.
+The code for this step is the function `calculate_curvature_offset(warped_binary,left_fit,right_fit)` located in code cell 1 of `code.py`.
 
 The method to calculate curvatures is based on the method provided in the [course page](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/40ec78ee-fb7c-4b53-94a8-028c5c60b858/concepts/2f928913-21f6-4611-9055-01744acc344f).
 
@@ -247,9 +248,9 @@ def image_process_pipeline(mtx, dist,M,Minv):
 
     return process
 ```
-Note that here I defined a list `fit_info` to keep last 5 poly-fits, and used a **weighted average** to calculate the new poly-fit.
+Note that here I defined a list `fit_info` to keep previous 5 poly-fits, and used a **weighted average** to calculate the new poly-fit.
 
-The code for video processing is located in code cell 5 of `code.py`.
+The code for video processing is located in code cell 5 of `code.py`, which makes use of `Moviepy`
 
 Here's a [link to my video result](./output_images/video_output.mp4)
 
@@ -277,8 +278,8 @@ The pipeline will likely fail in situations where there are frequent light chang
 
 **What could you do to make it more robust?**
 
-This is difficult for me, I have spent a lot of efforts so far. Maybe try the following:
+This project is difficult for me, I have spent a lot of efforts so far. Maybe try the following:
 
 - Better use of history information
-- Checking the detected lane-lines are roughly parallel
-- Track loosing recovery
+- Checking that the detected lane-lines are roughly parallel, else use old detections
+- Method for recovering from loosing track of lane-lines
